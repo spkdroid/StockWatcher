@@ -21,6 +21,7 @@ dependencies {
     // With compose.desktop.common you will also lose @Preview functionality
     implementation(compose.desktop.currentOs)
     implementation("com.yahoofinance-api:YahooFinanceAPI:3.17.0")
+    implementation("org.json:json:20240303")
 }
 
 compose.desktop {

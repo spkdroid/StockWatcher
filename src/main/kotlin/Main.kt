@@ -8,8 +8,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import data.Stock
+import data.StockTickerMapper
 import ui.dashboard.DashboardScreen
 
 @Composable
@@ -26,15 +28,11 @@ fun App() {
     }
 }
 
-fun main() = application {
-    Window(onCloseRequest = ::exitApplication) {
-        val mockStocks = listOf(
-            Stock("AAPL", "Apple", 150.0, 1.2),
-            Stock("GOOGL", "Alphabet", 2800.0, -0.3),
-            Stock("AMZN", "Amazon", 3300.0, 0.5)
-        )
-        DashboardScreen(stocks = mockStocks) { stockSymbol, projection ->
-            println("Projection for $stockSymbol: $projection")
+fun main() {
+    application {
+        StockTickerMapper.loadStockTickers(this)
+        Window(onCloseRequest = ::exitApplication, title = "Stock Prediction App") {
+            DashboardScreen()
         }
     }
 }
