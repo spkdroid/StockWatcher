@@ -1,4 +1,4 @@
-name: Distribute Compose App
+name: Gradle Assemble
 
 on:
   push:
@@ -7,34 +7,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-distribute:
+  assemble:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target: [android, desktop]
-        include:
-          - target: android
-            gradle_task: assembleRelease
-            artifact_name: app-release.apk
-            artifact_path: app/build/outputs/apk/release/app-release.apk
-          - target: desktop
-            gradle_task: packageRelease
-            artifact_name: app-desktop.zip
-            artifact_path: app/build/distributions/app-desktop.zip
 
     steps:
-      # Checkout code
+      # Step 1: Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up JDK
+      # Step 2: Set up JDK
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # Set up caching for Gradle
+      # Step 3: Set up Gradle cache
       - name: Cache Gradle
         uses: actions/cache@v3
         with:
@@ -43,17 +31,10 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}
 
-      # Ensure gradlew has executable permissions
+      # Step 4: Ensure gradlew is executable
       - name: Grant execute permission for Gradle wrapper
         run: chmod +x gradlew
 
-      # Build the application
-      - name: Build for ${{ matrix.target }}
-        run: ./gradlew ${{ matrix.gradle_task }}
-
-      # Upload artifacts
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: ${{ matrix.artifact_path }}
+      # Step 5: Run the Gradle assemble task
+      - name: Assemble the project
+        run: ./gradlew assemble
