@@ -43,6 +43,10 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}
 
+      # Ensure gradlew has executable permissions
+      - name: Grant execute permission for Gradle wrapper
+        run: chmod +x gradlew
+
       # Build the application
       - name: Build for ${{ matrix.target }}
         run: ./gradlew ${{ matrix.gradle_task }}
@@ -53,20 +57,3 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_path }}
-
-  distribute:
-    runs-on: ubuntu-latest
-    needs: build-and-distribute
-    steps:
-      # Download all artifacts
-      - name: Download all artifacts
-        uses: actions/download-artifact@v3
-        with:
-          path: artifacts
-
-      # Example distribution step
-      - name: Distribute artifacts
-        run: |
-          echo "Distributing artifacts..."
-          ls artifacts/
-          # Add your custom distribution logic here, such as uploading to a server or app store.
