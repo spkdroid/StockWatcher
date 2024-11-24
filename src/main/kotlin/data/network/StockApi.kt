@@ -1,16 +1,15 @@
 package data.network
 
 import data.Stock
-import data.StockTickerMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.*
+import org.json.JSONArray
+import java.util.Properties
 
 object StockApi {
     private val config: Properties by lazy {
@@ -25,36 +24,39 @@ object StockApi {
     }
 
     private val API_KEY: String by lazy {
-        config.getProperty("ALPHA_VANTAGE_API_KEY")
+        config.getProperty("FMP_API_KEY")
             ?: throw IllegalStateException("API key not found in config.properties!")
     }
 
-    private const val BASE_URL = "https://www.alphavantage.co/query"
+    private const val BASE_URL = "https://financialmodelingprep.com/api/v3"
 
     /**
-     * Fetch stock details for a given symbol using Alpha Vantage.
+     * Fetch stock details for a given symbol using Financial Modeling Prep.
      */
     suspend fun searchStock(symbol: String): Stock? = withContext(Dispatchers.IO) {
         try {
-            val url = "$BASE_URL?function=GLOBAL_QUOTE&symbol=$symbol&apikey=$API_KEY"
+            val url = "$BASE_URL/profile/$symbol?apikey=$API_KEY"
             val connection = URL(url).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
 
             if (connection.responseCode == 200) {
                 val response = connection.inputStream.bufferedReader().readText()
-                println(response)
-                val jsonObject = JSONObject(response)
-                val globalQuote = jsonObject.getJSONObject("Global Quote")
+                val jsonArray = JSONArray(response)
 
-                val companyName = StockTickerMapper.getCompanyName(symbol)
+                if (jsonArray.length() > 0) {
+                    val stockJson = jsonArray.getJSONObject(0)
 
-                Stock(
-                    symbol = globalQuote.getString("01. symbol"),
-                    name = companyName, // Alpha Vantage doesn’t provide company names in free tier
-                    currentPrice = globalQuote.getDouble("05. price"),
-                    changePercentage = globalQuote.getString("10. change percent").removeSuffix("%").toDouble()
-                )
-            } else null
+                    Stock(
+                        symbol = stockJson.getString("symbol"),
+                        name = stockJson.getString("companyName"),
+                        currentPrice = stockJson.getDouble("price"),
+                        changePercentage = stockJson.optDouble("changes", 0.0)
+                    )
+                } else null
+            } else {
+                println("Error: Response code ${connection.responseCode}")
+                null
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -67,23 +69,13 @@ object StockApi {
     fun getRealTimePrice(symbol: String) = flow {
         while (true) {
             try {
-                val url = "$BASE_URL?function=GLOBAL_QUOTE&symbol=$symbol&apikey=$API_KEY"
-                val connection = URL(url).openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-
-                if (connection.responseCode == 200) {
-                    val response = connection.inputStream.bufferedReader().readText()
-                    val jsonObject = JSONObject(response)
-                    val globalQuote = jsonObject.getJSONObject("Global Quote")
-
-                    val updatedPrice = globalQuote.getDouble("05. price")
-                    emit(updatedPrice) // Emit the updated price
-
-                    delay(5000) // Wait for 5 seconds before fetching the price again
+                val stock = searchStock(symbol)
+                if (stock != null) {
+                    emit(stock.currentPrice) // Emit the updated price
                 } else {
-                    // Error handling can be improved
-                    emit(0.0)
+                    emit(0.0) // Emit a default value if stock details couldn't be fetched
                 }
+                delay(500000) // Wait for 5 seconds before fetching the price again
             } catch (e: Exception) {
                 e.printStackTrace()
                 emit(0.0) // Emit a default value in case of an error
@@ -91,3 +83,10 @@ object StockApi {
         }
     }
 }
+
+data class Stock(
+    val symbol: String,
+    val name: String,
+    val currentPrice: Double,
+    val changePercentage: Double
+)

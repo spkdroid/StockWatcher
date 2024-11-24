@@ -5,7 +5,7 @@ plugins {
     id("org.jetbrains.compose")
 }
 
-group = "com.spkd.tinycrm"
+group = "com.spark.stock_watcher"
 version = "1.0-SNAPSHOT"
 
 repositories {
