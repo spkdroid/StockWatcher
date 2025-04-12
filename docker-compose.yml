@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  stock-app:
+    build: .
+    container_name: stock_prediction_app
+    volumes:
+      - .:/app
+    environment:
+      - DISPLAY=${DISPLAY}
+    network_mode: "host"
