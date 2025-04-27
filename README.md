@@ -145,20 +145,12 @@ This project is licensed under the **MIT License**. See the `LICENSE` file for d
 
 ---
 
-## Acknowledgments 🙏
-
-- **Kotlin Community**: For providing a robust and flexible programming language.
-- **Yahoo Finance API**: For real-time stock market data.
-- **Compose Desktop Team**: For an incredible desktop UI framework.
-
----
-
 ## Contact 📧
 
 If you have any questions or feedback, feel free to reach out:
 
 - **Email**: vrk1990@outlook.com
-- **GitHub**: [spkdroid](https://github.com/spkdroid)
+- **GitHub**: [spkdroid](https://github.com/spkdro)
 
 ---
 
